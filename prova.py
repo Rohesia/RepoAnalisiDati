@@ -84,27 +84,47 @@ menu_1d = {
     "8": ("Posizione ordinata inserimento", posiz_ord_inserimento),
     "0": ("Torna indietro", None)
 }
-
-# LOOP PRINCIPALE
 while True:
-    print("\n--- Menu Analisi ---")
-    for key, (nome, _) in funz.items():
-        print(f"{key} - {nome}")
+    print("\n=== SCEGLI TIPO DI ANALISI ===")
+    print("1 - Analisi 2D (tutta la matrice)")
+    print("2 - Analisi 1D (una colonna)")
+    print("0 - Esci")
     
-    scelta = input("Scegli un'operazione: ")
+    tipo = input("Scegli un'opzione: ")
 
-    if scelta == "0":
+    if tipo == "0":
+        print("Uscita dal programma.")
         break
 
-    if scelta == "8":
-        stampa_report(dataset, colonne)
-        continue
+    elif tipo == "1":  # Analisi 2D
+        while True:
+            print("\n=== MENU 2D ===")
+            for key, (nome, _) in funz.items():
+                if key != "9":  # Escludiamo l'opzione 1D nel menu 2D
+                    print(f"{key} - {nome}")
+            
+            scelta2d = input("Scegli un'operazione 2D: ")
 
-    if scelta == "9":
+            if scelta2d == "0":
+                break
+
+            if scelta2d == "8":  # Report completo
+                stampa_report(dataset, colonne)
+                continue
+
+            if scelta2d in funz and funz[scelta2d][1] is not None:
+                nome_op, func = funz[scelta2d]
+                risultato = func(dataset)
+                print(f"\n--- Risultato {nome_op} ---")
+                print(risultato)
+                salva_csv({nome_op: risultato}, out_csv)
+                print("Risultato salvato.")
+
+    elif tipo == "2":  # Analisi 1D
         colonna, nome_col = scegli_colonna(dataset, colonne)
 
         while True:
-            print(f"\n--- Analisi 1D su '{nome_col}' ---")
+            print(f"\n=== MENU 1D: Analisi colonna '{nome_col}' ===")
             for key, (nome, _) in menu_1d.items():
                 print(f"{key} - {nome}")
 
@@ -115,24 +135,14 @@ while True:
 
             nome_op, func1d = menu_1d[scelta1d]
 
-            # Caso con parametro extra
+            # Caso con parametro extra (posizione ordinata inserimento)
             if scelta1d == "8":
                 x = float(input("Valore da inserire: "))
                 risultato = func1d(colonna, x)
             else:
                 risultato = func1d(colonna)
 
-            print(f"\nRisultato {nome_op}:\n{risultato}\n")
+            print(f"\n--- Risultato {nome_op} ---")
+            print(risultato)
             salva_csv({f"{nome_op} ({nome_col})": risultato}, out_csv)
             print("Risultato salvato.\n")
-
-        continue
-
-    # Operazioni 2D normali
-    if scelta in funz:
-        nome_op, func = funz[scelta]
-        risultato = func(dataset)
-
-        print(f"\nRisultato {nome_op}:\n{risultato}\n")
-        salva_csv({nome_op: risultato}, out_csv)
-        print("Risultato salvato.")
