@@ -2,6 +2,7 @@ import os
 import numpy as np
 from utils import read, salva_csv
 from funzioni import *
+from Array_Mono import *
 
 # File di output
 out_csv = "risultati.csv"
@@ -17,11 +18,19 @@ dataset = read(nome_csv)
 if dataset is None:
     exit()
 
-# Nomi delle colonne 
+# Nomi colonne
 colonne = ["massa_molecolare","idrofobicità","punto_isoelettrico",
            "solubilità","stabilità","assorbimento_uv","densità"]
 
-# Funzione per stampa report umano
+# Funzione per scegliere colonna (per analisi 1D)
+def scegli_colonna(dataset, colonne):
+    print("\n--- Seleziona colonna ---")
+    for i, nome in enumerate(colonne):
+        print(f"{i} - {nome}")
+    scelta = int(input("Inserisci indice colonna: "))
+    return dataset[:, scelta], colonne[scelta]
+
+# STAMPA REPORT COMPLETO
 def stampa_report(matrix, colonne):
     
     medie = media_colonne(matrix)
@@ -47,11 +56,9 @@ def stampa_report(matrix, colonne):
     print(f"Massa molecolare più bassa: {minimi[0]:.2f} Da\n")
     
     print("=== Note ===")
-    print("Le medie e deviazioni standard possono aiutare a valutare le proprietà generali")
-    print("delle proteine nel dataset, mentre i valori estremi evidenziano i casi particolari.")
+    print("Le medie e deviazioni standard aiutano a interpretare tendenze e outlier.\n")
 
-
-# Menu 
+# MENU PRINCIPALE
 funz = {
     "1": ("Somma colonne", somma_colonne),
     "2": ("Media colonne", media_colonne),
@@ -60,10 +67,25 @@ funz = {
     "5": ("Norma matrice", norma),
     "6": ("Trasposta matrice", trasposta),
     "7": ("Covarianza", covarianza),
-    "8": ("Stampa report proteine", None),  # funzione speciale
+    "8": ("Report proteine", None),
+    "9": ("Analisi 1D su una colonna", None),
     "0": ("Esci", None)
 }
 
+# MENU 1D
+menu_1d = {
+    "1": ("Valore minimo", val_min),
+    "2": ("Valore massimo", val_max),
+    "3": ("Media", media),
+    "4": ("Deviazione standard", dev_std),
+    "5": ("Indice valore minimo", indice_val_min),
+    "6": ("Indice valore massimo", indice_val_max),
+    "7": ("Mediana", mediana),
+    "8": ("Posizione ordinata inserimento", posiz_ord_inserimento),
+    "0": ("Torna indietro", None)
+}
+
+# LOOP PRINCIPALE
 while True:
     print("\n--- Menu Analisi ---")
     for key, (nome, _) in funz.items():
@@ -72,28 +94,45 @@ while True:
     scelta = input("Scegli un'operazione: ")
 
     if scelta == "0":
-        print("Uscita dal programma.")
         break
 
-    if scelta not in funz:
-        print("Scelta non valida, riprova.")
-        continue
-
-    nome, func = funz[scelta]
-
-    # Caso speciale per il report
     if scelta == "8":
         stampa_report(dataset, colonne)
         continue
 
-    # Tutte le altre funzioni
-    risultati = {nome: func(dataset)}
+    if scelta == "9":
+        colonna, nome_col = scegli_colonna(dataset, colonne)
 
-    # Mostra i risultati a video
-    print("\n--- Risultati ---")
-    for k, v in risultati.items():
-        print(f"{k}:\n{v}\n")
+        while True:
+            print(f"\n--- Analisi 1D su '{nome_col}' ---")
+            for key, (nome, _) in menu_1d.items():
+                print(f"{key} - {nome}")
 
-    # Salva su CSV
-    salva_csv(risultati, out_csv)
-    print(f"Risultati aggiunti a '{out_csv}'")
+            scelta1d = input("Scegli operazione 1D: ")
+
+            if scelta1d == "0":
+                break
+
+            nome_op, func1d = menu_1d[scelta1d]
+
+            # Caso con parametro extra
+            if scelta1d == "8":
+                x = float(input("Valore da inserire: "))
+                risultato = func1d(colonna, x)
+            else:
+                risultato = func1d(colonna)
+
+            print(f"\nRisultato {nome_op}:\n{risultato}\n")
+            salva_csv({f"{nome_op} ({nome_col})": risultato}, out_csv)
+            print("Risultato salvato.\n")
+
+        continue
+
+    # Operazioni 2D normali
+    if scelta in funz:
+        nome_op, func = funz[scelta]
+        risultato = func(dataset)
+
+        print(f"\nRisultato {nome_op}:\n{risultato}\n")
+        salva_csv({nome_op: risultato}, out_csv)
+        print("Risultato salvato.")

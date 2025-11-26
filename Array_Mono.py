@@ -1,9 +1,6 @@
 #import libreria numpy
 import numpy as np
-from prova import read_csv
 
-arr = np.array(read_csv("proteine.csv"))
-print("Array:", arr)
 
 #STATISTTICHE DI BASE
 def val_min(arr):  #valore minimo
